@@ -78,5 +78,5 @@ VlnPlot(data.filt, features = c("S.Score", "G2M.Score"), group.by = "orig.ident"
         ncol = 4, pt.size = 0.1)
 dev.off()
 dim(data.filt)
-saveRDS(data.filt, "CRC_BRAF_afterQC_BRAF.rds")
+saveRDS(data.filt, "CRC_BRAF_afterQC.rds")
 save.image("CRC_BRAF_QC.RData")
