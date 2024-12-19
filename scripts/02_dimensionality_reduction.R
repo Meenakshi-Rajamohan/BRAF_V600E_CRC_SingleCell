@@ -7,17 +7,7 @@ library(scran)
 
 setwd("/Users/merajam/Documents/CRC/2_Analysis/2_DR/")
 
-BRAF <- readRDS("/Users/merajam/Documents/CRC/2_Analysis/1_QC/BRAF/CRC_BRAF_afterQC_BRAF.rds")
-BRAF$category <- "BRAF"
 
-NonBRAF <- readRDS("/Users/merajam/Documents/CRC/2_Analysis/1_QC/NonBRAF/CRC_NonBRAF_afterQC_NonBRAF.rds")
-NonBRAF$category <- "NonBRAF"
-
-alldata <- merge(BRAF, y = NonBRAF)
-saveRDS(alldata, "merged.rds")
-
-## -------------------------------------------------------------------------------------------
-print("2- Feature selection !")
 suppressWarnings(suppressMessages(alldata <- FindVariableFeatures(alldata, selection.method =
                                                                     "vst", nfeatures = 2000, verbose = FALSE, assay = "RNA")))
 
@@ -27,11 +17,11 @@ LabelPoints(plot = VariableFeaturePlot(alldata), points = top20, repel = TRUE)
 dev.off()
 
 ## -------------------------------------------------------------------------------------------
-print("3- Z-score transformation !")
+print("Z-score transformation !")
 alldata <- ScaleData(alldata, vars.to.regress = c("percent_mito", "nFeature_RNA"), assay = "RNA")
 
 ## -------------------------------------------------------------------------------------------
-print("4- PCA !")
+print("PCA !")
 alldata <- RunPCA(alldata, npcs = 50, verbose = F)
 
 ## ---- fig.asp=.28---------------------------------------------------------------------------
@@ -53,7 +43,7 @@ ElbowPlot(alldata, reduction = "pca", ndims = 50)
 dev.off()
 
 ## ----fig.asp=1------------------------------------------------------------------------------
-print("4- tSNE !")
+print("tSNE !")
 alldata <- RunTSNE(alldata, reduction = "pca", dims = 1:30,
                    perplexity = 30,
                    max_iter = 1000,
@@ -67,7 +57,7 @@ plot_grid(ncol = 1, DimPlot(alldata, reduction = "tsne", group.by = "orig.ident"
 dev.off()
 
 ## -------------------------------------------------------------------------------------------
-print("5- RunUMAP !")
+print("RunUMAP !")
 alldata <- RunUMAP(alldata, reduction = "pca", dims = 1:30,
                    n.components = 2,
                    n.neighbors = 30,
