@@ -1,19 +1,81 @@
-# Load libraries and data
 library(Seurat)
 library(Matrix)
-library(ggplot2)
+library(knitr)
 library(cowplot)
+library(ggplot2)
+library(scran)
 
-input_dir <- "output/"
-output_dir <- "output/"
+setwd("/Users/merajam/Documents/CRC/2_Analysis/2_DR/")
 
-# Load QC data
-alldata <- readRDS(file.path(input_dir, "data_after_qc.rds"))
+BRAF <- readRDS("/Users/merajam/Documents/CRC/2_Analysis/1_QC/BRAF/CRC_BRAF_afterQC_BRAF.rds")
+BRAF$category <- "BRAF"
 
-# PCA and UMAP
-alldata <- ScaleData(alldata, vars.to.regress = c("percent_mito", "nFeature_RNA"))
-alldata <- RunPCA(alldata, npcs = 30)
-alldata <- RunUMAP(alldata, dims = 1:30)
+NonBRAF <- readRDS("/Users/merajam/Documents/CRC/2_Analysis/1_QC/NonBRAF/CRC_NonBRAF_afterQC_NonBRAF.rds")
+NonBRAF$category <- "NonBRAF"
 
-# Save plots
-save_dim_reduction_plots(alldata, output_dir)
+alldata <- merge(BRAF, y = NonBRAF)
+saveRDS(alldata, "merged.rds")
+
+## -------------------------------------------------------------------------------------------
+print("2- Feature selection !")
+suppressWarnings(suppressMessages(alldata <- FindVariableFeatures(alldata, selection.method =
+                                                                    "vst", nfeatures = 2000, verbose = FALSE, assay = "RNA")))
+
+top20 <- head(VariableFeatures(alldata), 20)
+png("DR_1_high_variable_genes.png", units="in", width=10, height=10, res=300)
+LabelPoints(plot = VariableFeaturePlot(alldata), points = top20, repel = TRUE)
+dev.off()
+
+## -------------------------------------------------------------------------------------------
+print("3- Z-score transformation !")
+alldata <- ScaleData(alldata, vars.to.regress = c("percent_mito", "nFeature_RNA"), assay = "RNA")
+
+## -------------------------------------------------------------------------------------------
+print("4- PCA !")
+alldata <- RunPCA(alldata, npcs = 50, verbose = F)
+
+## ---- fig.asp=.28---------------------------------------------------------------------------
+png("DR_2_PCs.png", units="in", width=20, height=10, res=300)
+plot_grid(ncol = 3,
+          DimPlot(alldata, reduction = "pca", group.by = "orig.ident", dims = 1:2),
+          DimPlot(alldata, reduction = "pca", group.by = "orig.ident", dims = 3:4),
+          DimPlot(alldata, reduction = "pca", group.by = "orig.ident", dims = 5:6))
+dev.off()
+
+## ----fig.asp=.5-----------------------------------------------------------------------------
+png("DR_3_PCs.png", units="in", width=20, height=10, res=300)
+VizDimLoadings(alldata, dims = 1:5, reduction = "pca", ncol = 5, balanced = T)
+dev.off()
+
+## ----fig.asp=.3-----------------------------------------------------------------------------
+png("DR_4_variance_PCs.png", units="in", width=20, height=10, res=300)
+ElbowPlot(alldata, reduction = "pca", ndims = 50)
+dev.off()
+
+## ----fig.asp=1------------------------------------------------------------------------------
+print("4- tSNE !")
+alldata <- RunTSNE(alldata, reduction = "pca", dims = 1:30,
+                   perplexity = 30,
+                   max_iter = 1000,
+                   theta = 0.5,
+                   eta = 200,
+                   num_threads = 0)
+
+## ----fig.asp=.28----------------------------------------------------------------------------
+png("DR_5_tsne.png", units="in", width=10, height=10, res=300)
+plot_grid(ncol = 1, DimPlot(alldata, reduction = "tsne", group.by = "orig.ident"))
+dev.off()
+
+## -------------------------------------------------------------------------------------------
+print("5- RunUMAP !")
+alldata <- RunUMAP(alldata, reduction = "pca", dims = 1:30,
+                   n.components = 2,
+                   n.neighbors = 30,
+                   n.epochs = 200,
+                   min.dist = 0.3,
+                   learning.rate = 1,
+                   spread = 1)
+
+# Save the processed data
+saveRDS(alldata, "CRC_merged_afterDR.rds")
+save.image("CRC_merged_DR.RData")
