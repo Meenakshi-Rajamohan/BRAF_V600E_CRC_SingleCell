@@ -34,5 +34,4 @@ This project investigates the immune landscape and cellular composition of BRAF 
   - `02_dimensionality_reduction.R`: Performs PCA, UMAP, and t-SNE for visualization.
   - `03_integration.R`: Integrates datasets and corrects batch effects.
   - `04_tcell_annotation.R`: Annotates T-cell subpopulations using ProjecTILs.
-  - `utils.R`: Contains helper functions for common tasks.
 - `output/`: Contains visualization outputs.
