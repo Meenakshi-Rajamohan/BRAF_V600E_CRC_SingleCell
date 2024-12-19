@@ -15,7 +15,7 @@ This project investigates the immune landscape and cellular composition of BRAF 
 
 1. **Dataset Preprocessing**:
    - scRNA-seq data from two CRC studies were quality controlled to exclude low-quality cells and doublets.
-   - Batch effects were corrected using Seurat's anchor-based integration and Harmony.
+   - Batch effects were corrected using Seurat's anchor-based integration.
 
 2. **Dimensionality Reduction**:
    - PCA, UMAP, and t-SNE were used to reduce dimensionality and visualize data.
